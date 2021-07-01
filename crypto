@@ -1,0 +1,55 @@
+#!/usr/bin/env bash
+
+
+usage(){
+
+	 echo "./crypto [option] [crytocurrency-name]"
+}
+
+hel(){
+	usage
+	echo "options
+	-c | --coin 	name of the coin or coins
+	-h | --help	please stop get some help"
+
+}
+
+
+crypto=bitcoin
+
+while [[ "$1" != "" ]]
+do
+	case $1 in 
+
+		-c|--coins|--coin)
+			shift
+			crypto="$1" ;;
+	 
+		-h|--help)
+			hel
+			exit;;
+	
+		*) 	
+			usage
+			exit 1
+			
+	esac
+	shift
+done
+
+json=$(curl --location --silent --request GET "api.coincap.io/v2/assets?ids="$crypto"" | jq '.data')  
+
+len=$(( $(echo $crypto | tr "," " " | wc -w  ) - 1))
+
+#echo "$len"
+
+for i in $(eval echo "{0..$len}")
+do
+	coin=$(jq <<< "$json" .[$i].id )
+	price=$(jq <<< "$json" .[$i].priceUsd | bc )
+	
+	printf "%s : %.3f\n" "$coin" $price 
+
+done
+
+
